@@ -10,7 +10,7 @@ import json
 import os
 import os.path as osp
 from collections import defaultdict
-from typing import Optional, Union
+from typing import List, Dict, Optional, Union
 
 import cv2
 import numpy as np
@@ -166,11 +166,11 @@ class BoundingBox:
         return self.__area
 
     @property
-    def xywh(self) -> list[Union[int, float]]:
+    def xywh(self) -> List[Union[int, float]]:
         return [self.x1, self.y1, self.w, self.h]
 
     @property
-    def xyxy(self) -> list[Union[int, float]]:
+    def xyxy(self) -> List[Union[int, float]]:
         return [self.x1, self.y1, self.x2, self.y2]
 
     def get_iou(self, other):
@@ -200,7 +200,7 @@ class COCO:
     def __repr__(self):
         coco_str = "COCO Dataset format annotation\n"
         coco_str += f"Number of Categories :\t {len(self.cats)}\n"
-        coco_str += f"Number of Image : \t\t{len(self.imgs)}\n"
+        coco_str += f"Number of Image : \t{len(self.imgs)}\n"
         coco_str += f"Number of Annotations :\t {len(self.annos)}"
         return coco_str
 
@@ -210,7 +210,7 @@ class COCO:
         return json.load(open(file_name, 'r'))
 
     @staticmethod
-    def _loadIndex(annotation_list_object: list[dict]) -> dict[int, dict]:
+    def _loadIndex(annotation_list_object: List[Dict]) -> Dict[int, Dict]:
         ret = {}
         for list_object in annotation_list_object:
             ret[list_object['id']] = list_object
@@ -228,7 +228,7 @@ class COCO:
             cat_img[catId].append(imgId)
         return img_anno, cat_img
 
-    def getImgIds(self, catIds: Optional[list[int]] = None):
+    def getImgIds(self, catIds: Optional[List[int]] = None):
         imgIds = []
         if catIds is None:
             imgIds = [imgId for imgId, img in self.imgs.items()]
@@ -236,7 +236,7 @@ class COCO:
             imgIds = self._cat_img[catIds]
         return imgIds
 
-    def getAnnIds(self, imgIds: Union[list[int], int]) -> list[int]:
+    def getAnnIds(self, imgIds: Union[List[int], int]) -> List[int]:
         """Get all annotations ID for the given Image ID
 
         Args:
@@ -250,14 +250,14 @@ class COCO:
             annIds += self._img_anno[imgId]
         return annIds
 
-    def loadImgs(self, imgIds: Union[list[int], int]):
+    def loadImgs(self, imgIds: Union[List[int], int]):
         imgIds = imgIds if isinstance(imgIds, list) else [imgIds]
         imgs = []
         for imgId in imgIds:
             imgs.append(self.imgs[imgId])
         return imgs
 
-    def loadAnns(self, annIds: Union[list[int], int]):
+    def loadAnns(self, annIds: Union[List[int], int]):
         annIds = annIds if isinstance(annIds, list) else [annIds]
         annos = []
         for annId in annIds:
@@ -340,7 +340,7 @@ class AssertCOCO:
             img_dir (str): The base image dir name
         """
         self._assert_images(img_dir)
-        self._assert_annotations_iou(0.8)
+        self._assert_annotations_iou(0.9)
 
 
 class COCOVis:
@@ -348,15 +348,21 @@ class COCOVis:
                 coco: COCO, 
                 img_dir: str, 
                 dst_dir: str, 
-                COLOR_PALETTE: list[list[int]] = COLOR_PALETTE):
+                vis_txt_bg_color:bool = True,
+                vis_txt_above_bbox:bool = False,
+                vis_txt_attribute:List[str] = [],
+                COLOR_PALETTE: List[List[int]] = COLOR_PALETTE):
         self.__coco = coco
         self.img_dir = img_dir
         self.dst_dir = dst_dir
         self.COLOR_PALETTE = COLOR_PALETTE
+        self.vis_txt_bg_color = vis_txt_bg_color
+        self.vis_txt_above_bbox = vis_txt_above_bbox
+        self.vis_txt_attribute = vis_txt_attribute
         self.__font = cv2.FONT_HERSHEY_SIMPLEX
         self.__text_size = cv2.getTextSize('sample', self.__font, 0.5, 1)[0]
 
-    def vis_bbox(self, img_arr: np.ndarray, bbox: BoundingBox, catId: int):
+    def vis_bbox(self, img_arr: np.ndarray, bbox: BoundingBox, catId: int, txt_append: str = ""):
         """Visualizaion of the COCO format annotation
 
         Args:
@@ -379,17 +385,29 @@ class COCOVis:
 
         # Write Class Name
         text = self.__coco.cats[catId]['name']
+        if txt_append != "": text += txt_append
+
         txt_color = (0, 0, 0) if np.mean(_color_np) > 122 else (255, 255, 255)
         txt_bk_color = (_color_np * 0.7).astype(np.uint8).tolist()
-        cv2.rectangle(
-            vis_img_arr,
-            (x1, y1 + 1),
-            (x1 + self.__text_size[0] + 1, y1 + int(1.4 * self.__text_size[1])),
-            txt_bk_color,
-            -1,
-        )
+        if self.vis_txt_above_bbox:
+            txt_x1, txt_y1 = x1, y1 - 2
+            txt_bbox_x1, txt_bbox_y1 = x1, y1 - int(1.4 * self.__text_size[1])
+            txt_bbox_x2, txt_bbox_y2 = x1 + self.__text_size[0] + 1, y1 - 1
+        else:
+            txt_x1, txt_y1 = x1, y1 + self.__text_size[1]
+            txt_bbox_x1, txt_bbox_y1 = x1, y1 + 1
+            txt_bbox_x2, txt_bbox_y2 = x1 + self.__text_size[0] + 1, y1 + int(1.4 * self.__text_size[1])
+
+        if self.vis_txt_bg_color:
+            cv2.rectangle(
+                vis_img_arr,
+                (txt_bbox_x1, txt_bbox_y1),
+                (txt_bbox_x2, txt_bbox_y2),
+                txt_bk_color,
+                -1,
+            )
         cv2.putText(
-            vis_img_arr, text, (x1, y1 + self.__text_size[1]), self.__font, 0.5, txt_color, 1
+            vis_img_arr, text, (txt_x1, txt_y1), self.__font, 0.5, txt_color, 1
         )
         return vis_img_arr
 
@@ -414,6 +432,11 @@ class COCOVis:
             anno = self.__coco.loadAnns(annIds=[annId])[0]
             bbox = BoundingBox(*anno['bbox'])
             catId = anno['category_id']
-            img_arr = self.vis_bbox(img_arr, bbox, catId)
+            txt_append = ""
+            if len(self.vis_txt_attribute):
+                for anno_attribute in self.vis_txt_attribute:
+                    if anno['attributes'].get(anno_attribute):
+                        txt_append += anno_attribute[:4]
 
+            img_arr = self.vis_bbox(img_arr, bbox, catId, txt_append)
         return img_arr
