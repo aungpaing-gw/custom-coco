@@ -199,9 +199,9 @@ class COCO:
 
     def __repr__(self):
         coco_str = "COCO Dataset format annotation\n"
-        coco_str += f"Number of Categories :\t {len(self.cats)}\n"
-        coco_str += f"Number of Image : \t{len(self.imgs)}\n"
-        coco_str += f"Number of Annotations :\t {len(self.annos)}"
+        coco_str += f"Number of Categories \t : {len(self.cats)}\n"
+        coco_str += f"Number of Image : \t : {len(self.imgs)}\n"
+        coco_str += f"Number of Annotations \t : {len(self.annos)}"
         return coco_str
 
     @staticmethod
@@ -329,7 +329,7 @@ class AssertCOCO:
             assert _imgId in _imgIds, f"Image ID :{_imgId} is not correct"
             assert _catId in _catIds, f"Category ID :{_imgId} is not correct"
 
-    def assert_img_level_annotations(self, img_dir: str):
+    def assert_img_level_annotations(self, img_dir: str, assert_iou: bool):
         """Assert the correctness of annotation in image level
         For each image assert
         - Image file Exists
@@ -340,7 +340,9 @@ class AssertCOCO:
             img_dir (str): The base image dir name
         """
         self._assert_images(img_dir)
-        self._assert_annotations_iou(0.9)
+        if assert_iou:
+            print("Assert the IOU scores")
+            self._assert_annotations_iou(0.9)
 
 
 class COCOVis:
