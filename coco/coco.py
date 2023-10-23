@@ -290,6 +290,7 @@ class AssertCOCO:
             img = self.coco.loadImgs(imgIds=[imgId])[0]
             img_base_name = img['file_name']
 
+            # TODO: Instead of using loop, use Array
             for i, annId in enumerate(annIds):
                 anno = self.coco.loadAnns(annIds=annId)[0]
                 bbox = BoundingBox(*anno['bbox'])
@@ -309,6 +310,8 @@ class AssertCOCO:
         """
         _imgIds = [imgId for imgId, _ in self.coco.imgs.items()]
         _catIds = [catId for catId, _ in self.coco.cats.items()]
+        assert len(_imgIds) == len(set(_imgIds)), f"Duplicated Image ID"
+        assert len(_catIds) == len(set(_catIds)), f"Duplicated Category ID"
         for _, anno in self.coco.annos.items():
             _imgId = anno['image_id']
             _catId = anno['category_id']
@@ -326,8 +329,8 @@ class AssertCOCO:
             assert 0 <= _y1 <= imgH, f"bbox coordinate out of range: {_y1} / {imgH}"
             assert 0 <= _y2 <= imgH, f"bbox coordinate out of range: {_y2} / {imgH}"
 
-            assert _imgId in _imgIds, f"Image ID :{_imgId} is not correct"
-            assert _catId in _catIds, f"Category ID :{_imgId} is not correct"
+            assert self.coco.imgs.get(_imgId), f"Image ID :{_imgId} is not correct"
+            assert self.coco.cats.get(_catId), f"Category ID :{_imgId} is not correct"
 
     def assert_img_level_annotations(self, img_dir: str, assert_iou: bool):
         """Assert the correctness of annotation in image level

@@ -15,52 +15,68 @@ import cv2
 from coco.coco import COCO, AssertCOCO, COCOVis
 from coco.coco_report import COCOReport
 
-anno_file = './annotations/instances_default.json'
-img_dir = 'img'
-dst_dir = 'vis'
+anno_file = '/home/aung/Documents/data/VisDrone/final/merge_annotations/instances_val2017.json'
+img_dir = '/home/aung/Documents/data/VisDrone/final/val2017'
+dst_dir = '/home/aung/Documents/data/VisDrone/final/vis_val'
 os.makedirs(dst_dir, exist_ok=True)
+
+vis_txt_bg_color = True
+vis_txt_above_bbox = True
+
+# set to [] if we don't want any attribute for visualization
+vis_txt_attribute = []
+
+assert_iou = False
+num_images = 20
 
 
 def main():
     coco = COCO(anno_file)
     print(coco)
 
-    # coco_assert = AssertCOCO(coco)
-    # coco_assert.assert_img_level_annotations(img_dir)
-    # coco_assert.assert_anno_level_annotations()
+    coco_assert = AssertCOCO(coco)
+    coco_assert.assert_img_level_annotations(img_dir, assert_iou)
+    coco_assert.assert_anno_level_annotations()
 
-    coco_vis = COCOVis(coco, img_dir, dst_dir)
+    coco_vis = COCOVis(coco, img_dir, dst_dir, 
+                       vis_txt_bg_color, vis_txt_above_bbox, vis_txt_attribute)
 
-    # Let's visualize for 10 images
     imgIds = coco.getImgIds()
+    # imgIds = sorted(imgIds)
     random.shuffle(imgIds)
+
+    frame_idx = 0
 
     for imgId in imgIds:
         img = coco.loadImgs(imgIds=imgId)[0]
         img_base_name = img['file_name']
         img_full_name = osp.join(img_dir, img_base_name)
+        dst_full_name = osp.join(dst_dir, img_base_name)
         if not os.path.exists(img_full_name): continue
-        print(img_full_name)
+        # print(img_full_name)
         img_arr = coco_vis.vis(imgId)
-        cv2.imwrite(img_full_name, img_arr)
+        cv2.imwrite(dst_full_name, img_arr)
 
-    coco_report = COCOReport(anno_file)
+        frame_idx += 1
+        if frame_idx >= num_images: break
 
-    # Area Distribution
-    area_ax = coco_report.area_ax
-    area_ax.set_title(f"test: Area Distribution")
-    area_plot = coco_report.area_fig
-    area_plot.savefig('test_area.png')
+    # coco_report = COCOReport(anno_file)
 
-    # Class Distribution
-    cls_ax = coco_report.cls_distribution_ax
-    cls_ax.set_title(f"test: Class Count Occurance")
-    cls_plot = coco_report.cls_distribution_fig
-    cls_plot.savefig("test_dist_plot.png")
+    # # Area Distribution
+    # area_ax = coco_report.area_ax
+    # area_ax.set_title(f"val Distribution")
+    # area_plot = coco_report.area_fig
+    # area_plot.savefig(osp.join(dst_dir, 'val_area.png'))
 
-    # Heatmap
-    heatmap = coco_report.heatmap.heatmap
-    cv2.imwrite('heatmap.png', heatmap)
+    # # Class Distribution
+    # cls_ax = coco_report.cls_distribution_ax
+    # cls_ax.set_title(f"val: Class Count Occurance")
+    # cls_plot = coco_report.cls_distribution_fig
+    # cls_plot.savefig(osp.join(dst_dir, "val_dist_plot.png"))
+
+    # # Heatmap
+    # heatmap = coco_report.heatmap.heatmap
+    # cv2.imwrite(osp.join(dst_dir, 'val_heatmap.png'), heatmap)
 
 
 if __name__ == '__main__':
