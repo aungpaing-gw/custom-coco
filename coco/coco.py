@@ -1,11 +1,11 @@
-'''
+"""
 file : COCO.py
 
 author : Aung Paing
 cdate : Wednesday September 27th 2023
 mdate : Wednesday September 27th 2023
 copyright: 2023 GlobalWalkers.inc. All rights reserved.
-'''
+"""
 import json
 import os
 import os.path as osp
@@ -16,29 +16,29 @@ import cv2
 import numpy as np
 
 COLOR_PALETTE = [
-    (0, 0, 0),       # Black
-    (255, 255, 255), # White
-    (255, 0, 0),     # Red
-    (0, 255, 0),     # Green
-    (0, 0, 255),     # Blue
-    (255, 255, 0),   # Yellow
-    (255, 0, 255),   # Magenta
-    (0, 255, 255),   # Cyan
-    (128, 128, 128), # Gray
-    (192, 192, 192), # Silver
-    (128, 0, 0),     # Maroon
-    (128, 128, 0),   # Olive
-    (0, 128, 0),     # Green (Dark)
-    (128, 0, 128),   # Purple
-    (0, 128, 128),   # Teal
-    (0, 64, 128),    # Blue (Dark)
-    (64, 0, 128),    # Purple (Dark)
-    (128, 64, 0),    # Brown
-    (0, 128, 64),    # Green (Light)
-    (0, 64, 0),      # Green (Dark)
-    (64, 0, 0),      # Red (Dark)
+    (0, 0, 0),  # Black
+    (255, 255, 255),  # White
+    (255, 0, 0),  # Red
+    (0, 255, 0),  # Green
+    (0, 0, 255),  # Blue
+    (255, 255, 0),  # Yellow
+    (255, 0, 255),  # Magenta
+    (0, 255, 255),  # Cyan
+    (128, 128, 128),  # Gray
+    (192, 192, 192),  # Silver
+    (128, 0, 0),  # Maroon
+    (128, 128, 0),  # Olive
+    (0, 128, 0),  # Green (Dark)
+    (128, 0, 128),  # Purple
+    (0, 128, 128),  # Teal
+    (0, 64, 128),  # Blue (Dark)
+    (64, 0, 128),  # Purple (Dark)
+    (128, 64, 0),  # Brown
+    (0, 128, 64),  # Green (Light)
+    (0, 64, 0),  # Green (Dark)
+    (64, 0, 0),  # Red (Dark)
     (255, 128, 128),  # Light Red
-    (255, 128, 0),   # Orange
+    (255, 128, 0),  # Orange
     (255, 255, 128),  # Light Yellow
     (128, 255, 128),  # Light Green
     (128, 255, 255),  # Light Cyan
@@ -48,61 +48,61 @@ COLOR_PALETTE = [
     (255, 192, 128),  # Peach
     (255, 192, 192),  # Light Pink
     (128, 128, 64),  # Olive (Dark)
-    (128, 64, 64),   # Brown (Dark)
+    (128, 64, 64),  # Brown (Dark)
     (128, 64, 128),  # Purple (Medium)
-    (128, 0, 64),    # Maroon (Dark)
-    (64, 128, 0),    # Olive (Light)
-    (192, 64, 0),    # Orange (Dark)
-    (192, 192, 0),   # Yellow (Dark)
+    (128, 0, 64),  # Maroon (Dark)
+    (64, 128, 0),  # Olive (Light)
+    (192, 64, 0),  # Orange (Dark)
+    (192, 192, 0),  # Yellow (Dark)
     (192, 192, 128),  # Khaki
     (192, 192, 64),  # Olive (Medium)
     (128, 192, 64),  # Olive (Medium-Dark)
     (192, 128, 128),  # Rose
     (64, 192, 128),  # Green (Medium-Light)
     (64, 192, 192),  # Teal (Medium)
-    (64, 64, 192),   # Blue (Medium)
+    (64, 64, 192),  # Blue (Medium)
     (192, 64, 192),  # Purple (Medium-Light)
     (192, 192, 192),  # Light Gray
-    (0, 0, 64),      # Blue (Dark)
-    (0, 64, 64),     # Teal (Dark)
-    (0, 0, 128),     # Blue (Dark)
-    (0, 128, 128),   # Teal (Medium)
-    (0, 64, 192),    # Blue (Medium-Light)
-    (64, 0, 64),     # Purple (Dark)
-    (64, 64, 0),     # Olive (Dark)
-    (64, 0, 0),      # Maroon (Dark)
-    (192, 0, 0),     # Red (Medium-Dark)
-    (192, 0, 192),   # Purple (Medium-Dark)
-    (192, 128, 0),   # Brown (Medium)
+    (0, 0, 64),  # Blue (Dark)
+    (0, 64, 64),  # Teal (Dark)
+    (0, 0, 128),  # Blue (Dark)
+    (0, 128, 128),  # Teal (Medium)
+    (0, 64, 192),  # Blue (Medium-Light)
+    (64, 0, 64),  # Purple (Dark)
+    (64, 64, 0),  # Olive (Dark)
+    (64, 0, 0),  # Maroon (Dark)
+    (192, 0, 0),  # Red (Medium-Dark)
+    (192, 0, 192),  # Purple (Medium-Dark)
+    (192, 128, 0),  # Brown (Medium)
     (128, 128, 192),  # Blue (Medium-Light)
-    (128, 0, 192),   # Purple (Medium-Dark)
-    (192, 0, 128),   # Magenta (Dark)
-    (128, 0, 64),    # Maroon (Medium-Dark)
+    (128, 0, 192),  # Purple (Medium-Dark)
+    (192, 0, 128),  # Magenta (Dark)
+    (128, 0, 64),  # Maroon (Medium-Dark)
     (128, 64, 192),  # Purple (Medium-Light)
     (64, 128, 192),  # Blue (Medium-Light)
     (192, 128, 192),  # Pink (Light)
-    (192, 0, 64),    # Red (Medium-Dark)
+    (192, 0, 64),  # Red (Medium-Dark)
     (192, 64, 128),  # Pink (Medium)
-    (64, 192, 0),    # Green (Medium)
+    (64, 192, 0),  # Green (Medium)
     (128, 192, 128),  # Green (Medium-Light)
     (128, 192, 192),  # Cyan (Medium)
     (192, 192, 128),  # Green (Medium-Light)
-    (192, 192, 0),   # Yellow (Medium)
-    (0, 192, 64),    # Green (Medium-Light)
-    (0, 192, 192),   # Teal (Medium)
+    (192, 192, 0),  # Yellow (Medium)
+    (0, 192, 64),  # Green (Medium-Light)
+    (0, 192, 192),  # Teal (Medium)
     (64, 192, 192),  # Teal (Medium-Light)
     (128, 128, 64),  # Olive (Medium-Dark)
-    (0, 128, 192),   # Blue (Medium-Light)
+    (0, 128, 192),  # Blue (Medium-Light)
     (192, 128, 64),  # Brown (Medium)
-    (192, 128, 0),   # Brown (Medium)
-    (128, 128, 0),   # Olive (Medium)
-    (64, 128, 64),   # Olive (Medium)
-    (192, 64, 64),   # Red (Medium-Dark)
-    (0, 128, 64),    # Green (Medium)
-    (64, 192, 0),    # Green (Medium)
-    (128, 64, 64),   # Red (Medium-Dark)
-    (64, 64, 192),   # Blue (Medium-Light)
-    (128, 0, 192),   # Purple (Medium-Dark)
+    (192, 128, 0),  # Brown (Medium)
+    (128, 128, 0),  # Olive (Medium)
+    (64, 128, 64),  # Olive (Medium)
+    (192, 64, 64),  # Red (Medium-Dark)
+    (0, 128, 64),  # Green (Medium)
+    (64, 192, 0),  # Green (Medium)
+    (128, 64, 64),  # Red (Medium-Dark)
+    (64, 64, 192),  # Blue (Medium-Light)
+    (128, 0, 192),  # Purple (Medium-Dark)
     (64, 192, 128),  # Teal (Medium-Light)
     (128, 192, 192),  # Cyan (Medium-Light)
 ]
@@ -113,11 +113,13 @@ def assert_file(file_name: str):
 
 
 class BoundingBox:
-    def __init__(self,
-                x1: Union[int, float],
-                y1: Union[int, float],
-                w: Union[int, float],
-                h: Union[int, float]):
+    def __init__(
+        self,
+        x1: Union[int, float],
+        y1: Union[int, float],
+        w: Union[int, float],
+        h: Union[int, float],
+    ):
         """COCO Format Bounding Box Class
 
         Args:
@@ -128,8 +130,8 @@ class BoundingBox:
         """
         self.__x1 = x1
         self.__y1 = y1
-        self.__w  = w
-        self.__h  = h
+        self.__w = w
+        self.__h = h
         self.__x2 = self.x1 + w
         self.__y2 = self.y1 + h
         self.__area = w * h
@@ -146,23 +148,23 @@ class BoundingBox:
         return self.__x2
 
     @property
-    def y1(self) -> Union[int, float] :
+    def y1(self) -> Union[int, float]:
         return self.__y1
 
     @property
-    def y2(self) -> Union[int, float] :
+    def y2(self) -> Union[int, float]:
         return self.__y2
 
     @property
-    def w(self) -> Union[int, float] :
+    def w(self) -> Union[int, float]:
         return self.__w
 
     @property
-    def h(self) -> Union[int, float] :
+    def h(self) -> Union[int, float]:
         return self.__h
 
     @property
-    def area(self) -> Union[int, float] :
+    def area(self) -> Union[int, float]:
         return self.__area
 
     @property
@@ -179,7 +181,7 @@ class BoundingBox:
         _intersection_x2 = min(self.x2, other.x2)
         _intersection_y2 = min(self.y2, other.y2)
 
-        _intersection = max( _intersection_x2 - _intersection_x1 , 0) * max(
+        _intersection = max(_intersection_x2 - _intersection_x1, 0) * max(
             _intersection_y2 - _intersection_y1, 0
         )
         _union = (self.area + other.area) - _intersection
@@ -190,10 +192,10 @@ class BoundingBox:
 class COCO:
     def __init__(self, annotation_file: str):
         self.file_name = annotation_file
-        self.data      = self.read_json(self.file_name)
-        self.cats      = self._loadIndex(self.data['categories'])
-        self.imgs      = self._loadIndex(self.data['images'])
-        self.annos     = self._loadIndex(self.data['annotations'])
+        self.data = self.read_json(self.file_name)
+        self.cats = self._loadIndex(self.data["categories"])
+        self.imgs = self._loadIndex(self.data["images"])
+        self.annos = self._loadIndex(self.data["annotations"])
 
         self._img_anno, self._cat_img = self._get_image_annotation_pair()
 
@@ -207,13 +209,13 @@ class COCO:
     @staticmethod
     def read_json(file_name: str):
         assert_file(file_name)
-        return json.load(open(file_name, 'r'))
+        return json.load(open(file_name, "r"))
 
     @staticmethod
     def _loadIndex(annotation_list_object: List[Dict]) -> Dict[int, Dict]:
         ret = {}
         for list_object in annotation_list_object:
-            ret[list_object['id']] = list_object
+            ret[list_object["id"]] = list_object
         return ret
 
     def _get_image_annotation_pair(self):
@@ -221,8 +223,8 @@ class COCO:
         cat_img = defaultdict(list)
 
         for annoId, annotation in self.annos.items():
-            imgId = annotation['image_id']
-            catId = annotation['category_id']
+            imgId = annotation["image_id"]
+            catId = annotation["category_id"]
 
             img_anno[imgId].append(annoId)
             cat_img[catId].append(imgId)
@@ -277,26 +279,25 @@ class AssertCOCO:
         """
         assert_file(img_dir)
         for imgId, img in self.coco.imgs.items():
-            img_base_name = img['file_name']
+            img_base_name = img["file_name"]
             img_full_name = osp.join(img_dir, img_base_name)
             assert_file(img_full_name)
             cv2.imread(img_full_name)
 
     def _assert_annotations_iou(self, iou_threshold=0.5):
-        """Assert the IOU of the annotation in the images
-        """
+        """Assert the IOU of the annotation in the images"""
         for imgId, _ in self.coco.imgs.items():
             annIds = self.coco.getAnnIds(imgIds=imgId)
             img = self.coco.loadImgs(imgIds=[imgId])[0]
-            img_base_name = img['file_name']
+            img_base_name = img["file_name"]
 
             # TODO: Instead of using loop, use Array
             for i, annId in enumerate(annIds):
                 anno = self.coco.loadAnns(annIds=annId)[0]
-                bbox = BoundingBox(*anno['bbox'])
-                for j, otherAnnId in enumerate(annIds[i+1:]):
+                bbox = BoundingBox(*anno["bbox"])
+                for j, otherAnnId in enumerate(annIds[i + 1 :]):
                     otherAnno = self.coco.loadAnns(annIds=otherAnnId)[0]
-                    otherBbox = BoundingBox(*otherAnno['bbox'])
+                    otherBbox = BoundingBox(*otherAnno["bbox"])
                     iou = bbox.get_iou(otherBbox)
                     assert iou < iou_threshold, f"{img_base_name} has \
                         \nIOU : {iou},\nBBox : {bbox} && {otherBbox}"
@@ -313,16 +314,16 @@ class AssertCOCO:
         assert len(_imgIds) == len(set(_imgIds)), f"Duplicated Image ID"
         assert len(_catIds) == len(set(_catIds)), f"Duplicated Category ID"
         for _, anno in self.coco.annos.items():
-            _imgId = anno['image_id']
-            _catId = anno['category_id']
+            _imgId = anno["image_id"]
+            _catId = anno["category_id"]
 
             # Assert bounding box correctness
             # Get current annotation bounding box coordinate
-            _x1, _y1, _w, _h = anno['bbox']
+            _x1, _y1, _w, _h = [int(__x) for __x in anno["bbox"]]
             _x2, _y2 = _x1 + _w, _y1 + _h
             # Get image shape for this annotation
             _img = self.coco.imgs[_imgId]
-            imgH, imgW = _img['height'], _img['width']
+            imgH, imgW = int(_img["height"]), int(_img["width"])
 
             assert 0 <= _x1 <= imgW, f"bbox coordinate out of range: {_x1} / {imgW}"
             assert 0 <= _x2 <= imgW, f"bbox coordinate out of range: {_x2} / {imgW}"
@@ -349,14 +350,16 @@ class AssertCOCO:
 
 
 class COCOVis:
-    def __init__(self, 
-                coco: COCO, 
-                img_dir: str, 
-                dst_dir: str, 
-                vis_txt_bg_color:bool = True,
-                vis_txt_above_bbox:bool = False,
-                vis_txt_attribute:List[str] = [],
-                COLOR_PALETTE: List[List[int]] = COLOR_PALETTE):
+    def __init__(
+        self,
+        coco: COCO,
+        img_dir: str,
+        dst_dir: str,
+        vis_txt_bg_color: bool = True,
+        vis_txt_above_bbox: bool = False,
+        vis_txt_attribute: List[str] = [],
+        COLOR_PALETTE: List[List[int]] = COLOR_PALETTE,
+    ):
         self.__coco = coco
         self.img_dir = img_dir
         self.dst_dir = dst_dir
@@ -365,9 +368,11 @@ class COCOVis:
         self.vis_txt_above_bbox = vis_txt_above_bbox
         self.vis_txt_attribute = vis_txt_attribute
         self.__font = cv2.FONT_HERSHEY_SIMPLEX
-        self.__text_size = cv2.getTextSize('sample', self.__font, 0.5, 1)[0]
+        self.__text_size = cv2.getTextSize("sample", self.__font, 0.5, 1)[0]
 
-    def vis_bbox(self, img_arr: np.ndarray, bbox: BoundingBox, catId: int, txt_append: str = ""):
+    def vis_bbox(
+        self, img_arr: np.ndarray, bbox: BoundingBox, catId: int, txt_append: str = ""
+    ):
         """Visualizaion of the COCO format annotation
 
         Args:
@@ -389,8 +394,9 @@ class COCOVis:
         cv2.rectangle(vis_img_arr, [x1, y1], [x2, y2], _color, 2)
 
         # Write Class Name
-        text = self.__coco.cats[catId]['name']
-        if txt_append != "": text += txt_append
+        text = self.__coco.cats[catId]["name"]
+        if txt_append != "":
+            text += txt_append
 
         txt_color = (0, 0, 0) if np.mean(_color_np) > 122 else (255, 255, 255)
         txt_bk_color = (_color_np * 0.7).astype(np.uint8).tolist()
@@ -401,7 +407,10 @@ class COCOVis:
         else:
             txt_x1, txt_y1 = x1, y1 + self.__text_size[1]
             txt_bbox_x1, txt_bbox_y1 = x1, y1 + 1
-            txt_bbox_x2, txt_bbox_y2 = x1 + self.__text_size[0] + 1, y1 + int(1.4 * self.__text_size[1])
+            txt_bbox_x2, txt_bbox_y2 = (
+                x1 + self.__text_size[0] + 1,
+                y1 + int(1.4 * self.__text_size[1]),
+            )
 
         if self.vis_txt_bg_color:
             cv2.rectangle(
@@ -411,9 +420,7 @@ class COCOVis:
                 txt_bk_color,
                 -1,
             )
-        cv2.putText(
-            vis_img_arr, text, (txt_x1, txt_y1), self.__font, 0.5, txt_color, 1
-        )
+        cv2.putText(vis_img_arr, text, (txt_x1, txt_y1), self.__font, 0.5, txt_color, 1)
         return vis_img_arr
 
     def vis(self, imgId: int):
@@ -427,7 +434,7 @@ class COCOVis:
         """
         annIds = self.__coco.getAnnIds(imgIds=imgId)
         img = self.__coco.loadImgs(imgIds=[imgId])[0]
-        img_base_name = img['file_name']
+        img_base_name = img["file_name"]
         img_full_name = osp.join(self.img_dir, img_base_name)
         assert_file(img_full_name)
         img_arr = cv2.imread(img_full_name)
@@ -435,12 +442,12 @@ class COCOVis:
 
         for annId in annIds:
             anno = self.__coco.loadAnns(annIds=[annId])[0]
-            bbox = BoundingBox(*anno['bbox'])
-            catId = anno['category_id']
+            bbox = BoundingBox(*anno["bbox"])
+            catId = anno["category_id"]
             txt_append = ""
             if len(self.vis_txt_attribute):
                 for anno_attribute in self.vis_txt_attribute:
-                    if anno['attributes'].get(anno_attribute):
+                    if anno["attributes"].get(anno_attribute):
                         txt_append += anno_attribute[:4]
 
             img_arr = self.vis_bbox(img_arr, bbox, catId, txt_append)
