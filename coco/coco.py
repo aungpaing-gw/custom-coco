@@ -140,11 +140,11 @@ class BoundingBox:
         return f"xyxy : [{self.x1:.2f},{self.y1:.2f},{self.x2:.2f},{self.y2:.2f}]"
 
     @property
-    def x1(self):
+    def x1(self) -> Union[int, float]:
         return self.__x1
 
     @property
-    def x2(self):
+    def x2(self) -> Union[int, float]:
         return self.__x2
 
     @property
@@ -175,7 +175,7 @@ class BoundingBox:
     def xyxy(self) -> List[Union[int, float]]:
         return [self.x1, self.y1, self.x2, self.y2]
 
-    def get_iou(self, other):
+    def get_iou(self, other) -> float:
         _intersection_x1 = max(self.x1, other.x1)
         _intersection_y1 = max(self.y1, other.y1)
         _intersection_x2 = min(self.x2, other.x2)
@@ -190,6 +190,13 @@ class BoundingBox:
 
 
 class COCO:
+    """COCO Class for accessing coco dataset
+    Implementation inspired from pycocotools
+
+    Args:
+        annotation_file (str): COCO format annotation file
+    """
+
     def __init__(self, annotation_file: str):
         self.file_name = annotation_file
         self.data = self.read_json(self.file_name)
@@ -233,7 +240,7 @@ class COCO:
     def getImgIds(self, catIds: Optional[List[int]] = None):
         imgIds = []
         if catIds is None:
-            imgIds = [imgId for imgId, img in self.imgs.items()]
+            imgIds = [imgId for imgId, _ in self.imgs.items()]
         else:
             imgIds = self._cat_img[catIds]
         return imgIds
@@ -272,13 +279,13 @@ class AssertCOCO:
         self.coco = coco
 
     def _assert_images(self, img_dir: str):
-        """Assert the exist of image file name and the file is valid
+        """Assert the exist of image file name and the file is valid (readable)
 
         Args:
             img_dir (str): The base image dir name
         """
         assert_file(img_dir)
-        for imgId, img in self.coco.imgs.items():
+        for _, img in self.coco.imgs.items():
             img_base_name = img["file_name"]
             img_full_name = osp.join(img_dir, img_base_name)
             assert_file(img_full_name)
@@ -311,6 +318,7 @@ class AssertCOCO:
         """
         _imgIds = [imgId for imgId, _ in self.coco.imgs.items()]
         _catIds = [catId for catId, _ in self.coco.cats.items()]
+        # TODO: show duplicated Ids
         assert len(_imgIds) == len(set(_imgIds)), f"Duplicated Image ID"
         assert len(_catIds) == len(set(_catIds)), f"Duplicated Category ID"
         for _, anno in self.coco.annos.items():
